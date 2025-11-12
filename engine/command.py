@@ -22,7 +22,12 @@ def takecommand():
         r.pause_threshold = 1.5
         r.adjust_for_ambient_noise(source, duration=0.5)
 
-        audio = r.listen(source, timeout=15, phrase_time_limit=10)
+        try:
+            audio = r.listen(source, timeout=15, phrase_time_limit=10)
+        except sr.WaitTimeoutError:
+            eel.DisplayMessage("Listening timed out.")
+            return ""
+
 
     try:
         print('recognizing')
