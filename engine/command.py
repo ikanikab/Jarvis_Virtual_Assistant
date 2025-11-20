@@ -8,7 +8,7 @@ def speak(text):
     engine = pyttsx3.init('sapi5')
     voices = engine.getProperty('voices')
     engine.setProperty('voice', voices[0].id)
-    engine.setProperty('rate',172)
+    engine.setProperty('rate',173)
     eel.DisplayMessage(text)
     engine.say(text)
     eel.receiverText(text)
@@ -23,7 +23,7 @@ def takecommand():
         r.adjust_for_ambient_noise(source, duration=0.5)
 
         try:
-            audio = r.listen(source, timeout=15, phrase_time_limit=10)
+            audio = r.listen(source, timeout=12, phrase_time_limit=8)
         except sr.WaitTimeoutError:
             eel.DisplayMessage("Listening timed out.")
             return ""

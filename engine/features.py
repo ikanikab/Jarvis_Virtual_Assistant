@@ -5,7 +5,7 @@ from playsound import playsound
 import pvporcupine
 import pyaudio
 from engine.command import speak
-from engine.config import ASSISTANT_NAME
+from engine.config import ASSISTANT_NAME, LLM_KEY
 import os
 import pywhatkit as kit
 import struct
@@ -17,14 +17,6 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 import pyttsx3
 import speech_recognition as sr
-
-# Load Hugging Face model once at startup
-model_id = "google/gemma-3-270m-it"
-token = os.getenv("HF_TOKEN")
-
-tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True, token=token)
-model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, device_map="auto", trust_remote_code=True).eval()
-# ends
 
 from engine.helper import extract_yt_term
 
@@ -122,51 +114,70 @@ def hotWord():
             paud.terminate()
 
 # chat bot
+import google.generativeai as genai
 @eel.expose
 def chatBot(query):
-    print("Received query:", query)
-
-    if not query.strip():
-        speak("Please say something.")
-        return
-
     try:
-        messages = [
-            {"role": "system", "content": "You are Jarvis, a helpful and friendly AI assistant."},
-            {"role": "user", "content": query},
-        ]
+        query = query.replace(ASSISTANT_NAME, "")
+        query = query.replace("search", "")
+        # Set your API key
+        genai.configure(api_key=LLM_KEY)
 
-        # Create chat text
-        chat_text = tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, tokenize=False
-        )
+        # Select a model
+        model = genai.GenerativeModel("gemini-2.0-flash")
 
-        inputs = tokenizer(chat_text, return_tensors="pt").to(model.device)
-
-        # Generate
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=150,
-                temperature=0.8,
-                do_sample=True,
-                top_p=0.9,
-                repetition_penalty=1.1,
-                pad_token_id=tokenizer.eos_token_id,
-            )
-
-        # Decode only the new tokens
-        generated_text = tokenizer.decode(
-            outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
-        ).strip()
-
-        if not generated_text:
-            generated_text = "Sorry, I couldn’t understand that."
-
-        print("Gemma:", generated_text)
-        eel.receiverText(generated_text)
-        speak(generated_text)
-
+        # Generate a response
+        response = model.generate_content(query)
+        filter_text = markdown_to_text(response.text)
+        speak(filter_text)
     except Exception as e:
-        print("Error in chatBot:", e)
-        speak("Sorry, there was a problem processing that.")
+        print("Error:", e)
+
+
+# Assistant name
+@eel.expose
+def assistantName():
+    name = ASSISTANT_NAME
+    return name
+
+@eel.expose
+def displaySysCommand():
+    cursor.execute("SELECT * FROM sys_command")
+    results = cursor.fetchall()
+    jsonArr = json.dumps(results)
+    eel.displaySysCommand(jsonArr)
+    return 1
+
+@eel.expose
+def deleteSysCommand(id):
+    cursor.execute("DELETE FROM sys_command WHERE id = ?", (id,))
+    con.commit()
+
+
+@eel.expose
+def addSysCommand(key, value):
+    cursor.execute(
+        '''INSERT INTO sys_command VALUES (?, ?, ?)''', (None,key, value))
+    con.commit()
+
+
+@eel.expose
+def displayWebCommand():
+    cursor.execute("SELECT * FROM web_command")
+    results = cursor.fetchall()
+    jsonArr = json.dumps(results)
+    eel.displayWebCommand(jsonArr)
+    return 1
+
+
+@eel.expose
+def addWebCommand(key, value):
+    cursor.execute(
+        '''INSERT INTO web_command VALUES (?, ?, ?)''', (None, key, value))
+    con.commit()
+
+
+@eel.expose
+def deleteWebCommand(id):
+    cursor.execute("DELETE FROM web_command WHERE Id = ?", (id,))
+    con.commit()
