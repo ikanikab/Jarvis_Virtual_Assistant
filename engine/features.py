@@ -11,14 +11,8 @@ import pywhatkit as kit
 import struct
 import pyautogui as autogui
 import time
-
-# newly added
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
-import pyttsx3
-import speech_recognition as sr
-
-from engine.helper import extract_yt_term
+import json
+from engine.helper import extract_yt_term,  markdown_to_text, clean_text
 
 import sqlite3
 conn = sqlite3.connect("jarvis.db")
@@ -114,13 +108,13 @@ def hotWord():
             paud.terminate()
 
 # chat bot
-import google.generativeai as genai
 @eel.expose
 def chatBot(query):
     try:
         query = query.replace(ASSISTANT_NAME, "")
         query = query.replace("search", "")
         # Set your API key
+        import google.generativeai as genai
         genai.configure(api_key=LLM_KEY)
 
         # Select a model
@@ -129,7 +123,10 @@ def chatBot(query):
         # Generate a response
         response = model.generate_content(query)
         filter_text = markdown_to_text(response.text)
-        speak(filter_text)
+        cleaned = clean_text(filter_text)
+        speak(cleaned)
+        return cleaned
+
     except Exception as e:
         print("Error:", e)
 
@@ -151,14 +148,14 @@ def displaySysCommand():
 @eel.expose
 def deleteSysCommand(id):
     cursor.execute("DELETE FROM sys_command WHERE id = ?", (id,))
-    con.commit()
+    conn.commit()
 
 
 @eel.expose
 def addSysCommand(key, value):
     cursor.execute(
         '''INSERT INTO sys_command VALUES (?, ?, ?)''', (None,key, value))
-    con.commit()
+    conn.commit()
 
 
 @eel.expose
@@ -174,10 +171,10 @@ def displayWebCommand():
 def addWebCommand(key, value):
     cursor.execute(
         '''INSERT INTO web_command VALUES (?, ?, ?)''', (None, key, value))
-    con.commit()
+    conn.commit()
 
 
 @eel.expose
 def deleteWebCommand(id):
     cursor.execute("DELETE FROM web_command WHERE Id = ?", (id,))
-    con.commit()
+    conn.commit()

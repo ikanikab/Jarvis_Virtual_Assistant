@@ -58,3 +58,8 @@ def markdown_to_text(md):
     html = markdown2.markdown(md)
     soup = BeautifulSoup(html, "html.parser")
     return soup.get_text().strip()
+
+def clean_text(text):
+    text = re.sub(r'[^\w\s.,!?-]', ' ', text)   # remove non-speakable chars
+    text = re.sub(r'\s+', ' ', text)           # remove extra spaces
+    return text.strip()

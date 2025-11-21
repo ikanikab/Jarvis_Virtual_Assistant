@@ -2,17 +2,29 @@ import pyttsx3
 import speech_recognition as sr
 import eel
 import time
+import re
 
 def speak(text):
     text = str(text)
-    engine = pyttsx3.init('sapi5')
-    voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[0].id)
-    engine.setProperty('rate',173)
-    eel.DisplayMessage(text)
-    engine.say(text)
-    eel.receiverText(text)
-    engine.runAndWait()
+
+    # REMOVE ALL NON-SAFE CHARACTERS
+    safe_text = re.sub(r'[^\x00-\x7F]+', ' ', text)   # remove all unicode
+    safe_text = re.sub(r'[^\w\s.,!?-]', ' ', safe_text)  # remove symbols
+    safe_text = re.sub(r'\s+', ' ', safe_text).strip()   # fix all weird spaces
+
+    try:
+        engine = pyttsx3.init('sapi5')
+        voices = engine.getProperty('voices')
+        engine.setProperty('voice', voices[0].id)
+        engine.setProperty('rate', 173)
+
+        eel.DisplayMessage(safe_text)
+        eel.receiverText(safe_text)
+
+        engine.say(safe_text)
+        engine.runAndWait()
+    except Exception as e:
+        print("Speech Error:", e)
 
 def takecommand():
     r = sr.Recognizer()
@@ -60,7 +72,7 @@ def allCommands(message=1):
         if "open" in query:
             from engine.features import openCommand
             openCommand(query)
-        elif "on youtube":
+        elif "on youtube" in query:
             from engine.features import PlayYoutube
             PlayYoutube(query)
         else:
