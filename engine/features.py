@@ -1,3 +1,5 @@
+# Core features: open apps, YouTube, chatbot (Gemini), DB commands
+
 import re
 import eel
 import webbrowser
@@ -118,7 +120,7 @@ def chatBot(query):
         genai.configure(api_key=LLM_KEY)
 
         # Select a model
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
         # Generate a response
         response = model.generate_content(query)

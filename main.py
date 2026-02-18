@@ -1,6 +1,6 @@
 import os
 import eel
-
+#  Initializes eel, opens the browser app
 from engine.features import * 
 from engine.command import *
 

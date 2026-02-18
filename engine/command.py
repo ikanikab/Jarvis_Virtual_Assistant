@@ -1,3 +1,4 @@
+# Speech input/output + allCommands dispatcher
 import pyttsx3
 import speech_recognition as sr
 import eel
@@ -78,7 +79,7 @@ def allCommands(message=1):
         else:
             from engine.features import chatBot
             chatBot(query)
-    except:
-        print("error")
+    except Exception as e:
+        print("error", e)
 
     eel.ShowHood()

@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import eel
+# Entry point, spawns two processes: Jarvis (main) + hotword detection
 
 # to run jarvis
 def startJarvis():
