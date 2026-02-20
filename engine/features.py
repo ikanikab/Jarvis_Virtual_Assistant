@@ -113,25 +113,35 @@ def hotWord():
 @eel.expose
 def chatBot(query):
     try:
+        from google import genai
+
         query = query.replace(ASSISTANT_NAME, "")
         query = query.replace("search", "")
-        # Set your API key
-        import google.generativeai as genai
-        genai.configure(api_key=LLM_KEY)
 
-        # Select a model
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        client = genai.Client(api_key=LLM_KEY)
 
-        # Generate a response
-        response = model.generate_content(query)
-        filter_text = markdown_to_text(response.text)
-        cleaned = clean_text(filter_text)
+        # Strong instruction for short output
+        prompt = f"""
+        Answer briefly in 2–3 simple lines.
+        No headings, no examples, no markdown.
+        Question: {query}
+        """
+
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=prompt
+        )
+
+        text = response.text.strip()
+
+        cleaned = clean_text(markdown_to_text(text))
         speak(cleaned)
+
         return cleaned
 
     except Exception as e:
         print("Error:", e)
-
+        return "Sorry, something went wrong."
 
 # Assistant name
 @eel.expose

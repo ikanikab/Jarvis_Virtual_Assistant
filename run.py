@@ -1,6 +1,6 @@
 import multiprocessing
-import os
-import eel
+import keyboard
+import sys
 # Entry point, spawns two processes: Jarvis (main) + hotword detection
 
 # to run jarvis
@@ -15,16 +15,23 @@ def listenHotWord():
     from engine.features import hotWord
     hotWord()
 
+def shutdown_listener(p1, p2):
+    keyboard.wait('q')
+    print("Q pressed → shutting down system")
+
+    if p1.is_alive():
+        p1.terminate()
+    if p2.is_alive():
+        p2.terminate()
+
+    print("System stopped")
+    sys.exit(0)
+
+
 # start the process
 if __name__ == '__main__':
     p1 = multiprocessing.Process(target = startJarvis)
     p2 = multiprocessing.Process(target = listenHotWord)
     p1.start()
     p2.start()
-    p1.join()
-
-    if p2.is_alive():
-        p2.terminate()
-        p2.join()
-    
-    print("system stop")
+    shutdown_listener(p1, p2)
